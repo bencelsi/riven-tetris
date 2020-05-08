@@ -28,7 +28,13 @@
 		<div id="menu">
 			<p id="start"><a href="javascript:play();">Press Space to Play.</a></p>
 			<p><canvas id="upcoming"></canvas></p>
-			<p>score <span id="score">00000</span></p>
+			<p>
+				<img id= "digit1" src="Dni0.png">
+				<img id= "digit2" src="Dni0.png">
+				<img id= "digit3" src="Dni0.png">
+				<img id= "digit4" src="Dni0.png">
+				<img id= "digit5" src="Dni0.png">
+			</p>
 			<p>rows <span id="rows">0</span></p>
 		</div>
 		<canvas id="canvas">
@@ -67,16 +73,16 @@
 		//-------------------------------------------------------------------------
 
 		var KEY     = { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 },
-				DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
-				stats   = new Stats(),
-				canvas  = get('canvas'),
-				ctx     = canvas.getContext('2d'),
-				ucanvas = get('upcoming'),
-				uctx    = ucanvas.getContext('2d'),
-				speed   = { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
-				nx      = 10, // width of tetris court (in blocks)
-				ny      = 20, // height of tetris court (in blocks)
-				nu      = 5;  // width/height of upcoming preview (in blocks)
+		DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
+		stats   = new Stats(),
+		canvas  = get('canvas'),
+		ctx     = canvas.getContext('2d'),
+		ucanvas = get('upcoming'),
+		uctx    = ucanvas.getContext('2d'),
+		speed   = { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
+		nx      = 10, // width of tetris court (in blocks)
+		ny      = 20, // height of tetris court (in blocks)
+		nu      = 5;  // width/height of upcoming preview (in blocks)
 
 		//-------------------------------------------------------------------------
 		// game variables (initialized during reset)
@@ -110,11 +116,11 @@
 		//
 		//-------------------------------------------------------------------------
 
-		var i = { size: 1, blocks: [0x0400, 0x0400, 0x0400, 0x0400], color: 'blue'   };
-		var l = { size: 3, blocks: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'orange' };
-		var o = { size: 2, blocks: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'purple' };
-		var s = { size: 3, blocks: [0x0670, 0x0664, 0x0E60, 0x2660], color: 'green' };
-		var z = { size: 4, blocks: [0xFF70, 0x3777, 0x0EFF, 0xEEEC], color: 'red'    };
+		var temple = { blocks: [0x0670, 0x0664, 0x0E60, 0x2660], color: 'green'  };
+		var jungle = { blocks: [0xFF70, 0x3777, 0x0EFF, 0xEEEC], color: 'red'    };
+		var boiler = { blocks: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: 'purple' };
+		var survey = { blocks: [0x4460, 0x0E80, 0xC440, 0x2E00], color: 'orange' };
+		var prison = { blocks: [0x0400, 0x0400, 0x0400, 0x0400], color: 'blue'   };
 
 		//------------------------------------------------
 		// do the bit manipulation and iterate through each
@@ -139,8 +145,9 @@
 		function occupied(type, x, y, dir) {
 			var result = false
 			eachblock(type, x, y, dir, function(x, y) {
-				if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y))
+				if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y)) {
 					result = true;
+				}
 			});
 			return result;
 		}
@@ -150,15 +157,19 @@
 		}
 
 		//-----------------------------------------
-		// start with 4 instances of each piece and
+		// start with 5 instances of each piece and
 		// pick randomly until the 'bag is empty'
 		//-----------------------------------------
 		var pieces = [];
 		function randomPiece() {
 			if (pieces.length == 0)
-				pieces = [i,i,i,i,l,l,l,l,o,o,o,o,s,s,s,s,z,z,z,z];
+				pieces = [temple,temple,temple,temple,temple,
+					jungle,jungle,jungle,jungle,jungle,
+					boiler,boiler,boiler,boiler,boiler,
+					survey,survey,survey,survey,survey,
+					prison,prison,prison,prison,prison];
 			var type = pieces.splice(random(0, pieces.length-1), 1)[0];
-			return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - type.size)), y: 0 };
+			return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - 4)), y: 0 };
 		}
 
 
@@ -225,7 +236,10 @@
 		//-------------------------------------------------------------------------
 
 		function play() { hide('start'); reset();          playing = true;  }
-		function lose() { show('start'); setVisualScore(); playing = false; }
+		function lose() {
+			show('start'); 
+			setVisualScore(); 
+			playing = false; }
 
 		function setVisualScore(n)      { vscore = n || score; invalidateScore(); }
 		function setScore(n)            { score = n; setVisualScore(n);  }
@@ -301,11 +315,10 @@
 
 		function drop() {
 			if (!move(DIR.DOWN)) {
-				addScore(10);
 				dropPiece();
 				removeLines();
 				setCurrentPiece(next);
-				setNextPiece(randomPiece());
+				setNextPiece();
 				clearActions();
 				if (occupied(current.type, current.x, current.y, current.dir)) {
 					lose();
@@ -335,7 +348,7 @@
 			}
 			if (n > 0) {
 				addRows(n);
-				addScore(100*Math.pow(2,n-1)); // 1: 100, 2: 200, 3: 400, 4: 800
+				addScore(Math.pow(5, n));
 			}
 		}
 
@@ -388,7 +401,7 @@
 
 		function drawNext() {
 			if (invalid.next) {
-				var padding = (nu - next.type.size) / 2; // half-arsed attempt at centering next piece display
+				var padding = (nu - 4) / 2; // half-arsed attempt at centering next piece display
 				uctx.save();
 				uctx.translate(0.5, 0.5);
 				uctx.clearRect(0, 0, nu*dx, nu*dy);
@@ -402,7 +415,12 @@
 
 		function drawScore() {
 			if (invalid.score) {
-				html('score', ("00000" + Math.floor(vscore)).slice(-5));
+				tempVscore = vscore
+				for (i = 5; i > 0; i--) {
+					get("digit" + i).src = "Dni" + Math.floor(tempVscore) % 25 + ".png"
+					tempVscore /= 25
+				}
+				console.log(vscore);
 				invalid.score = false;
 			}
 		}
