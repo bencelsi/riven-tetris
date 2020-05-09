@@ -5,7 +5,7 @@
 	<style>
 		body      { font-family: Helvetica, sans-serif; background-color: black; }
 		#tetris   { margin: 1em auto; padding: 1em; border: 4px solid black; background-color: #F8F8F8; }
-		#canvas   { display: inline-block; vertical-align: top; background: url(background.png); background-size: 100% 100%; border: 2px solid #333; }
+		#canvas   { display: inline-block; vertical-align: top; background: url(grid.png); background-size: 100% 100%; border: 2px solid #333; }
 		#menu     { display: inline-block; vertical-align: top; position: relative; }
 		#menu p   { margin: 0.5em 0; text-align: center; }
 		#menu p a { text-decoration: none; color: black; }
@@ -22,10 +22,9 @@
 </head>
 
 <body>
-
 	<div id="tetris">
 		<div id="menu">
-			<p id="start"><a href="javascript:play();">Press Space to Play.</a></p>
+			<p id="start"><a href="javascript:play();">Press Space to Start</a></p>
 			<p><canvas id="upcoming"></canvas></p>
 			<p>Score:
 				<img id= "score1" src="Dni0.png">
@@ -45,6 +44,32 @@
 		<canvas id="canvas">
 			Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
 		</canvas>
+		<audio loop id="music">
+			<source src="music.mp3" type="audio/mpeg">
+			Your browser does not support the audio element.
+		</audio>
+		<audio id="audio1">
+			<source id="audioSource1" type="audio/wav">
+			Your browser does not support the audio element.
+		</audio>
+		<audio id="audio2">
+			<source id="audioSource2" type="audio/wav">
+			Your browser does not support the audio element.
+		</audio>
+		<audio id="audio3">
+			<source id="audioSource3" type="audio/wav">
+			Your browser does not support the audio element.
+		</audio>
+
+		<audio id="audio4">
+			<source id="audioSource4" type="audio/wav">
+			Your browser does not support the audio element.
+		</audio>
+
+		<audio id="audio5">
+			<source id="audioSource5" type="audio/wav">
+			Your browser does not support the audio element.
+		</audio>
 	</div>
 	<script>
 
@@ -75,27 +100,40 @@
 		// game constants
 		//-------------------------------------------------------------------------
 
-		var KEY = { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 },
-		DIR     = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
-		canvas  = get('canvas'),
-		ctx     = canvas.getContext('2d'),
-		ucanvas = get('upcoming'),
-		uctx    = ucanvas.getContext('2d'),
-		speed   = { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
-		nx      = 10, // width of tetris court (in blocks)
-		ny      = 20, // height of tetris court (in blocks)
-		nu      = 5;  // width/height of upcoming preview (in blocks)
-		max     = 9765624;
+		var KEY		= { ESC: 27, SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 },
+		DIR			= { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3, MIN: 0, MAX: 3 },
+		canvas		= get('canvas'),
+		ctx			= canvas.getContext('2d'),
+		ucanvas		= get('upcoming'),
+		uctx		= ucanvas.getContext('2d'),
+		speed		= { start: 0.6, decrement: 0.005, min: 0.1 }, // how long before piece drops by 1 row (seconds)
+		nx			= 10, // width of tetris court (in blocks)
+		ny			= 20, // height of tetris court (in blocks)
+		nu			= 5;  // width/height of upcoming preview (in blocks)
+		max			= 9765624;
+		sound		= get('sound');
+		soundSource	= get('soundSource');
+		music		= get('music');
+		music.volume = .4
+
+		//TODO- if mousedown, not onclick(?) or nah...
+		//pause music with game
+		//pause game option
+		//linking book to enter
+		//island images for next
 
 		//Sound ideas - 
-		//music - just 233rd age ambiance?
+		//music - remix gehns instrument into tetris theme
+		//156
 		//new game - link
 		//move: dome code tick,
+		//rotate:
 		//cant move
 		//drop - waffle iron fail
 		//light selector, pinscreen, lake lever, wahrk smash, waffle iron, 
 		//win: gehn singing
 		//lose: fissure
+		//
 
 		//-------------------------------------------------------------------------
 		// game variables (initialized during reset)
@@ -182,7 +220,7 @@
 					survey,survey,survey,survey,survey,
 					prison,prison,prison,prison,prison];
 			var type = pieces.splice(random(0, pieces.length-1), 1)[0];
-			return { type: type, dir: DIR.UP, x: Math.round(random(0, nx - 4)), y: 0 };
+			return { type: type, dir: DIR.UP, x: 5, y: 0 };
 		}
 
 
@@ -233,7 +271,6 @@
 					case KEY.RIGHT:  actions.push(DIR.RIGHT); handled = true; break;
 					case KEY.UP:     actions.push(DIR.UP);    handled = true; break;
 					case KEY.DOWN:   actions.push(DIR.DOWN);  handled = true; break;
-					case KEY.ESC:    lose();                  handled = true; break;
 				}
 			}
 			else if (ev.keyCode == KEY.SPACE) {
@@ -248,8 +285,31 @@
 		// GAME LOGIC
 		//-------------------------------------------------------------------------
 
-		function play() { hide('start'); reset();          playing = true;  }
+		function play() {
+			music.currentTime = 0;
+			music.play();
+			playSound('start');
+			hide('start'); 
+			reset();
+			playing = true;
+		}
+
+		function playSound(sound) {
+			for (i = 1; i <= 5; i++) {
+				audio = get("audio" + i);
+				if (audio.paused) {
+					get("audioSource" + i).src = 'sounds/' + sound + '.wav'
+					audio.load()
+					audio.play();
+					return;
+				}
+			}
+			console.log('bad');
+		}
+
 		function lose() {
+			playSound('lose');
+			music.pause();
 			show('start'); 
 			setVisualScore(); 
 			playing = false; }
@@ -308,12 +368,16 @@
 				case DIR.DOWN:  y = y + 1; break;
 			}
 			if (unoccupied(current.type, x, y, current.dir)) {
+				playSound("move")
 				current.x = x;
 				current.y = y;
 				invalidate();
+				
 				return true;
-			}
-			else {
+			} else {
+				if (dir != DIR.DOWN) {
+					playSound("blocked")
+				}
 				return false;
 			}
 		}
@@ -321,6 +385,7 @@
 		function rotate() {
 			var newdir = (current.dir == DIR.MAX ? DIR.MIN : current.dir + 1);
 			if (unoccupied(current.type, current.x, current.y, newdir)) {
+				playSound('43_apedbtnb_1');
 				current.dir = newdir;
 				invalidate();
 			}
@@ -328,6 +393,7 @@
 
 		function drop() {
 			if (!move(DIR.DOWN)) {
+				playSound('drop' + Math.floor(random(1,4)));
 				dropPiece();
 				removeLines();
 				setCurrentPiece(next);
@@ -360,6 +426,7 @@
 				}
 			}
 			if (n > 0) {
+				playSound('row' + n);
 				addRows(n);
 				addScore(Math.pow(5, n));
 			}
