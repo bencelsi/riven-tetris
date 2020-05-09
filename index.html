@@ -169,7 +169,7 @@
 
 		var temple = { blocks: [0x0670, 0x0664, 0x0E60, 0x2660], color: '#05da01'  };
 		var jungle = { blocks: [0xFF70, 0x3777, 0x0EFF, 0xEEEC], color: '#f62550'    };
-		var boiler = { blocks: [0xCC00, 0xCC00, 0xCC00, 0xCC00], color: '#b70ddb' };
+		var boiler = { blocks: [0x0660, 0x0660, 0x0660, 0x0660], color: '#b70ddb' };
 		var survey = { blocks: [0x4460, 0x0E80, 0xC440, 0x2E00], color: '#f29405' };
 		var prison = { blocks: [0x0400, 0x0400, 0x0400, 0x0400], color: '#0a14db'   };
 
@@ -196,7 +196,7 @@
 		function occupied(type, x, y, dir) {
 			var result = false
 			eachblock(type, x, y, dir, function(x, y) {
-				if ((x < 0) || (x >= nx) || (y < 0) || (y >= ny) || getBlock(x,y)) {
+				if ((x < 0) || (x >= nx) || (y < -5) || (y >= ny) || getBlock(x,y)) {
 					result = true;
 				}
 			});
@@ -220,7 +220,7 @@
 					survey,survey,survey,survey,survey,
 					prison,prison,prison,prison,prison];
 			var type = pieces.splice(random(0, pieces.length-1), 1)[0];
-			return { type: type, dir: DIR.UP, x: 5, y: 0 };
+			return { type: type, dir: DIR.UP, x: 3, y: -2 };
 		}
 
 
@@ -393,7 +393,7 @@
 
 		function drop() {
 			if (!move(DIR.DOWN)) {
-				playSound('drop' + Math.floor(random(1,4)));
+				playSound('drop');
 				dropPiece();
 				removeLines();
 				setCurrentPiece(next);
